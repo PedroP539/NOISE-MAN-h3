@@ -1,10 +1,19 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+})
+
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Medidor de Ruído · Registo para Denúncia',
+  description:
+    'Meça, registe e documente ruído excessivo com base no Regulamento Geral do Ruído (Decreto-Lei n.º 9/2007) e gere um documento de denúncia.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -39,9 +48,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="pt" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
+      <body className="antialiased bg-background font-sans">
         {children}
+        <Toaster position="top-center" />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
