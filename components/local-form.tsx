@@ -105,7 +105,7 @@ export function LocalForm({ onSubmit, onCancel }: Props) {
         <Textarea id="notas" name="notas" rows={2} />
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 max-md:justify-center">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancelar
         </Button>

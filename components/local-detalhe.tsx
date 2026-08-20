@@ -30,8 +30,8 @@ export function LocalDetalhe({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-4 max-md:flex-col max-md:items-center">
+        <div className="flex flex-col items-start gap-2 max-md:items-center">
           <Button variant="ghost" size="sm" onClick={onVoltar} className="-ml-2 w-fit gap-2">
             <ArrowLeft className="size-4" />
             Voltar aos locais
@@ -68,7 +68,7 @@ export function LocalDetalhe({
       </div>
 
       <Tabs defaultValue="medir" className="w-full">
-        <TabsList>
+        <TabsList className="max-md:mx-auto">
           <TabsTrigger value="medir">Medir</TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="denuncia">Denúncia</TabsTrigger>

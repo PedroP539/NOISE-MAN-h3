@@ -58,7 +58,7 @@ export default function Page() {
           <Hero onNovo={() => setVista("novo")} />
 
           <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between max-md:flex-col max-md:gap-3">
               <h2 className="text-lg font-semibold text-foreground">Locais monitorizados</h2>
               <Button size="sm" onClick={() => setVista("novo")} className="gap-2">
                 <Plus className="size-4" />
@@ -105,8 +105,8 @@ function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
-      <footer className="mx-auto max-w-4xl px-4 pb-10 pt-4">
+      <main className="mx-auto max-w-4xl px-4 py-8 max-md:text-center">{children}</main>
+      <footer className="mx-auto max-w-4xl px-4 pb-10 pt-4 max-md:text-center">
         <p className="text-xs leading-relaxed text-muted-foreground">
           Ferramenta de apoio ao cidadão. As medições por microfone são indicativas e não
           calibradas; não têm valor pericial. Baseado no Regulamento Geral do Ruído (Decreto-Lei n.º
@@ -120,7 +120,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 function Hero({ onNovo }: { onNovo: () => void }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex flex-col gap-5 p-6 sm:p-8">
+      <div className="flex flex-col items-center gap-5 p-6 text-center sm:items-stretch sm:p-8 sm:text-left">
         <div className="flex flex-col gap-3">
           <h2 className="text-balance text-2xl font-semibold text-foreground sm:text-3xl">
             Meça, registe e documente o ruído excessivo
@@ -136,7 +136,7 @@ function Hero({ onNovo }: { onNovo: () => void }) {
           <PeriodoBox titulo="Entardecer" horario="20h – 23h" limite="4 dB(A)" />
           <PeriodoBox titulo="Noturno" horario="23h – 07h" limite="3 dB(A)" />
         </div>
-        <Button onClick={onNovo} className="w-fit gap-2">
+        <Button onClick={onNovo} className="w-fit gap-2 max-md:mx-auto">
           <Plus className="size-4" />
           Adicionar local
         </Button>
@@ -164,7 +164,7 @@ function LocalCard({ local, onClick }: { local: Local; onClick: () => void }) {
     <li>
       <button
         onClick={onClick}
-        className="group flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/60 hover:bg-card/80"
+        className="group flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/60 hover:bg-card/80 max-md:flex-col max-md:text-center"
       >
         <div className="flex flex-col gap-2">
           <span className="font-medium text-foreground">{local.nome}</span>
