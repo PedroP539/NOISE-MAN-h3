@@ -52,7 +52,7 @@ export default function RootLayout({
       <body className="antialiased bg-background font-sans">
         {children}
         <Toaster position="top-center" />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <Analytics />
       </body>
     </html>
   )
