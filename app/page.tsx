@@ -69,7 +69,7 @@ export default function Page() {
             {isLoading ? (
               <p className="text-sm text-muted-foreground">A carregar...</p>
             ) : locais.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border p-12 text-center">
+              <div className="glass-inset rounded-xl border-dashed p-12 text-center">
                 <AudioLines className="mx-auto mb-3 size-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   Ainda não há locais. Crie o primeiro para começar a medir e a documentar o ruído.
@@ -92,7 +92,7 @@ export default function Page() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
+      <header className="border-b border-white/10 bg-background/60 backdrop-blur-xl">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
           <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Activity className="size-5" />
@@ -119,7 +119,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Hero({ onNovo }: { onNovo: () => void }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card">
+    <section className="glass-surface overflow-hidden rounded-2xl">
       <div className="flex flex-col items-center gap-5 p-6 text-center sm:items-stretch sm:p-8 sm:text-left">
         <div className="flex flex-col gap-3">
           <h2 className="text-balance text-2xl font-semibold text-foreground sm:text-3xl">
@@ -147,7 +147,7 @@ function Hero({ onNovo }: { onNovo: () => void }) {
 
 function PeriodoBox({ titulo, horario, limite }: { titulo: string; horario: string; limite: string }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-3">
+    <div className="glass-inset rounded-lg p-3">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{titulo}</div>
       <div className="font-mono text-sm text-foreground">{horario}</div>
       <div className="mt-1 text-xs text-accent">Incomodidade máx. {limite}</div>
@@ -164,7 +164,7 @@ function LocalCard({ local, onClick }: { local: Local; onClick: () => void }) {
     <li>
       <button
         onClick={onClick}
-        className="group flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/60 hover:bg-card/80 max-md:flex-col max-md:text-center"
+        className="glass-surface group flex w-full items-center justify-between gap-3 rounded-xl p-4 text-left transition-colors hover:border-primary/60 hover:bg-white/12 max-md:flex-col max-md:text-center"
       >
         <div className="flex flex-col gap-2">
           <span className="font-medium text-foreground">{local.nome}</span>

@@ -56,11 +56,11 @@ export function DenunciaPanel({ local }: { local: Local }) {
         </div>
       </div>
 
-      <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-muted/30 p-5 font-mono text-xs leading-relaxed text-foreground">
+      <pre className="glass-inset max-h-[480px] overflow-auto whitespace-pre-wrap rounded-xl p-5 font-mono text-xs leading-relaxed text-foreground">
         {texto}
       </pre>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="glass-surface rounded-xl p-5">
         <h4 className="mb-2 text-sm font-semibold text-foreground">A quem apresentar a denúncia</h4>
         <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
           {ENTIDADES_DENUNCIA.map((e) => (

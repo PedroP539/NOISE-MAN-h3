@@ -117,7 +117,7 @@ export function SoundMeter({ onCapturar }: Props) {
 
 function Stat({ label, valor, destaque }: { label: string; valor: number | null; destaque?: boolean }) {
   return (
-    <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+    <div className="glass-inset rounded-lg px-3 py-2">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div
         className={`font-mono text-xl font-semibold tabular-nums ${destaque ? "text-primary" : "text-foreground"}`}

@@ -26,7 +26,7 @@ export function MedicoesLista({ medicoes, onApagar }: Props) {
         return (
           <div
             key={m.id}
-            className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left"
+            className="glass-surface flex flex-col items-center gap-3 rounded-xl p-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left"
           >
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center gap-2">

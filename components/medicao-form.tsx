@@ -57,7 +57,7 @@ export function MedicaoForm({ onSubmit }: Props) {
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="glass-surface rounded-xl p-6">
         <SoundMeter onCapturar={capturar} />
       </div>
 
