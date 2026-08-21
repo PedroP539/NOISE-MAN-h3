@@ -12,18 +12,22 @@ import { toast } from "sonner"
 
 type Props = {
   local: Local
+  abaInicial?: "medir" | "historico" | "denuncia"
   onVoltar: () => void
   onAdicionarMedicao: (id: string, payload: Partial<Medicao>) => Promise<void>
   onApagarMedicao: (id: string, medicaoId: string) => Promise<void>
   onApagarLocal: (id: string) => Promise<void>
+  onAtualizarLocal: (id: string, payload: Partial<Local>) => Promise<void>
 }
 
 export function LocalDetalhe({
   local,
+  abaInicial,
   onVoltar,
   onAdicionarMedicao,
   onApagarMedicao,
   onApagarLocal,
+  onAtualizarLocal,
 }: Props) {
   const zona = ZONAS[local.classificacaoZona]
   const excedeAlguma = local.medicoes.some((m) => avaliarIncomodidade(m).excede)
@@ -67,7 +71,7 @@ export function LocalDetalhe({
         </Button>
       </div>
 
-      <Tabs defaultValue="medir" className="w-full">
+      <Tabs key={`${local.id}-${abaInicial ?? "medir"}`} defaultValue={abaInicial ?? "medir"} className="w-full">
         <TabsList>
           <TabsTrigger value="medir">Medir</TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
@@ -94,7 +98,13 @@ export function LocalDetalhe({
         </TabsContent>
 
         <TabsContent value="denuncia" className="mt-6">
-          <DenunciaPanel local={local} />
+          <DenunciaPanel
+            local={local}
+            onAtualizar={async (payload) => {
+              await onAtualizarLocal(local.id, payload)
+              toast.success("Identificação guardada — é reutilizada nas próximas denúncias.")
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>

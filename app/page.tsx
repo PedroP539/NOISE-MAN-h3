@@ -51,12 +51,19 @@ function Conteudo() {
     locais,
     isLoading,
     criarLocal,
+    atualizarLocal,
     apagarLocal,
     adicionarMedicao,
     apagarMedicao,
   } = useLocais()
   const [vista, setVista] = useState<"lista" | "wizard" | "novo">("lista")
   const [selecionado, setSelecionado] = useState<string | null>(null)
+  const [abaDetalhe, setAbaDetalhe] = useState<"medir" | "historico" | "denuncia">("medir")
+
+  function abrirLocal(id: string, aba: "medir" | "historico" | "denuncia" = "medir") {
+    setSelecionado(id)
+    setAbaDetalhe(aba)
+  }
 
   const localAtivo = locais.find((l) => l.id === selecionado) ?? null
 
@@ -64,11 +71,14 @@ function Conteudo() {
     return (
       <>
         <LocalDetalhe
+          key={localAtivo.id}
           local={localAtivo}
+          abaInicial={abaDetalhe}
           onVoltar={() => setSelecionado(null)}
           onAdicionarMedicao={adicionarMedicao}
           onApagarMedicao={apagarMedicao}
           onApagarLocal={apagarLocal}
+          onAtualizarLocal={atualizarLocal}
         />
       </>
     )
@@ -87,7 +97,7 @@ function Conteudo() {
         }}
         onDenunciar={(localId) => {
           setVista("lista")
-          setSelecionado(localId)
+          abrirLocal(localId, "denuncia")
         }}
       />
     )
@@ -104,7 +114,7 @@ function Conteudo() {
               const novo = await criarLocal(payload)
               toast.success("Local criado.")
               setVista("lista")
-              setSelecionado(novo.id)
+              abrirLocal(novo.id)
             }}
           />
         </div>
@@ -133,7 +143,7 @@ function Conteudo() {
             ) : (
               <ul className="grid gap-3 sm:grid-cols-2">
                 {locais.map((l) => (
-                  <LocalCard key={l.id} local={l} onClick={() => setSelecionado(l.id)} />
+                  <LocalCard key={l.id} local={l} onClick={() => abrirLocal(l.id)} />
                 ))}
               </ul>
             )}
