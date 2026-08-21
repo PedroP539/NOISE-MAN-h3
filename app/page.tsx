@@ -61,7 +61,7 @@ function Conteudo() {
 
   if (localAtivo) {
     return (
-      <Shell>
+      <>
         <LocalDetalhe
           local={localAtivo}
           onVoltar={() => setSelecionado(null)}
@@ -69,12 +69,12 @@ function Conteudo() {
           onApagarMedicao={apagarMedicao}
           onApagarLocal={apagarLocal}
         />
-      </Shell>
+      </>
     )
   }
 
   return (
-    <Shell>
+    <>
       {vista === "novo" ? (
         <div className="mx-auto w-full max-w-2xl">
           <h2 className="mb-6 text-2xl font-semibold text-foreground">Novo local</h2>
@@ -120,7 +120,7 @@ function Conteudo() {
           </section>
         </div>
       )}
-    </Shell>
+    </>
   )
 }
 
