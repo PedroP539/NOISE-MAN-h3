@@ -4,6 +4,7 @@ import { useState } from "react"
 import useSWR, { useSWRConfig } from "swr"
 import { useLocais } from "@/hooks/use-locais"
 import { LocalForm } from "@/components/local-form"
+import { WizardMedicao } from "@/components/wizard-medicao"
 import { LocalDetalhe } from "@/components/local-detalhe"
 import { LoginPanel } from "@/components/login-panel"
 import { Button } from "@/components/ui/button"
@@ -54,7 +55,7 @@ function Conteudo() {
     adicionarMedicao,
     apagarMedicao,
   } = useLocais()
-  const [vista, setVista] = useState<"lista" | "novo">("lista")
+  const [vista, setVista] = useState<"lista" | "wizard" | "novo">("lista")
   const [selecionado, setSelecionado] = useState<string | null>(null)
 
   const localAtivo = locais.find((l) => l.id === selecionado) ?? null
@@ -73,11 +74,30 @@ function Conteudo() {
     )
   }
 
+  // Novo fluxo principal: medir primeiro, dados depois
+  if (vista === "wizard") {
+    return (
+      <WizardMedicao
+        locais={locais}
+        criarLocal={criarLocal}
+        adicionarMedicao={adicionarMedicao}
+        onConcluir={() => {
+          setVista("lista")
+          toast.success("Guardado. Podes voltar mais tarde para denunciar.")
+        }}
+        onDenunciar={(localId) => {
+          setVista("lista")
+          setSelecionado(localId)
+        }}
+      />
+    )
+  }
+
   return (
     <>
       {vista === "novo" ? (
         <div className="mx-auto w-full max-w-2xl">
-          <h2 className="mb-6 text-2xl font-semibold text-foreground">Novo local</h2>
+          <h2 className="mb-6 text-2xl font-semibold text-foreground">Novo local (formulário completo)</h2>
           <LocalForm
             onCancel={() => setVista("lista")}
             onSubmit={async (payload) => {
@@ -90,14 +110,14 @@ function Conteudo() {
         </div>
       ) : (
         <div className="flex flex-col gap-8">
-          <Hero onNovo={() => setVista("novo")} />
+          <Hero onMedir={() => setVista("wizard")} onNovo={() => setVista("novo")} />
 
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">Locais monitorizados</h2>
-              <Button size="sm" onClick={() => setVista("novo")} className="gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setVista("novo")} className="gap-2">
                 <Plus className="size-4" />
-                Novo local
+                Formulário completo
               </Button>
             </div>
 
@@ -169,29 +189,43 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Hero({ onNovo }: { onNovo: () => void }) {
+function Hero({ onMedir, onNovo }: { onMedir: () => void; onNovo: () => void }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="flex flex-col gap-5 p-6 sm:p-8">
+    <section className="glass relative overflow-hidden rounded-3xl">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-primary/15 blur-3xl"
+      />
+      <div className="relative flex flex-col gap-6 p-6 sm:p-10">
         <div className="flex flex-col gap-3">
-          <h2 className="text-balance text-2xl font-semibold text-foreground sm:text-3xl">
-            Meça, registe e documente o ruído excessivo
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-widest text-primary">
+            <AudioLines className="size-3.5" />
+            Registo rápido
+          </span>
+          <h2 className="text-balance text-3xl font-semibold text-foreground sm:text-4xl">
+            O ruído está a acontecer agora?
           </h2>
-          <p className="max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground">
-            Use o microfone do dispositivo para obter uma leitura indicativa em dB(A), registe todos
-            os dados do local e da fonte, e gere um documento de denúncia pronto a apresentar, com
-            enquadramento no Regulamento Geral do Ruído.
+          <p className="max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Mede já, guarda em segundos e organiza depois. Não percas o momento — os detalhes do
+            processo podem ser preenchidos mais tarde.
           </p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Button size="lg" onClick={onMedir} className="glow-amber gap-2 text-base">
+            <AudioLines className="size-5" />
+            Medir ruído agora
+          </Button>
+          <Button size="lg" variant="ghost" onClick={onNovo} className="text-muted-foreground">
+            Criar local com formulário completo
+          </Button>
+        </div>
+
+        <div className="grid gap-3 border-t border-border/60 pt-5 sm:grid-cols-3">
           <PeriodoBox titulo="Diurno" horario="07h – 20h" limite="5 dB(A)" />
           <PeriodoBox titulo="Entardecer" horario="20h – 23h" limite="4 dB(A)" />
           <PeriodoBox titulo="Noturno" horario="23h – 07h" limite="3 dB(A)" />
         </div>
-        <Button onClick={onNovo} className="w-fit gap-2">
-          <Plus className="size-4" />
-          Adicionar local
-        </Button>
       </div>
     </section>
   )

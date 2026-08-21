@@ -89,11 +89,34 @@ export function useSoundMeter() {
         window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
       const ctx = new AudioCtx()
       ctxRef.current = ctx
+
+      // Android/Chrome: o AudioContext nasce "suspended" e precisa de resume()
+      // explícito dentro do gesto do utilizador, senão os samples ficam a zero.
+      if (ctx.state === "suspended") {
+        await ctx.resume()
+      }
+      // Se ainda assim ficar suspenso (alguns Androids), retoma quando mudar de estado
+      ctx.onstatechange = () => {
+        if (ctxRef.current === ctx && ctx.state === "suspended") {
+          void ctx.resume()
+        }
+      }
+
       const source = ctx.createMediaStreamSource(stream)
       const analyser = ctx.createAnalyser()
       analyser.fftSize = 2048
       source.connect(analyser)
       analyserRef.current = analyser
+
+      // Se o microfone for retomado por outra app ou desligado, parar limpo
+      stream.getTracks().forEach((track) => {
+        track.onended = () => {
+          if (streamRef.current === stream) {
+            setState((s) => ({ ...s, erro: "O microfone foi interrompido pelo sistema." }))
+            parar()
+          }
+        }
+      })
 
       const data = new Float32Array(analyser.fftSize)
 
