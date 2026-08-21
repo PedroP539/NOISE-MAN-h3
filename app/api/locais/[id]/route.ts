@@ -44,7 +44,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ local: atualizado })
   } catch (error) {
     console.error("[v0] Erro a atualizar local:", error)
-    return NextResponse.json({ error: "Falha ao atualizar local" }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: "Falha ao atualizar local: " + msg }, { status: 500 })
   }
 }
 
@@ -65,6 +66,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Erro a apagar local:", error)
-    return NextResponse.json({ error: "Falha ao apagar local" }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: "Falha ao apagar local: " + msg }, { status: 500 })
   }
 }

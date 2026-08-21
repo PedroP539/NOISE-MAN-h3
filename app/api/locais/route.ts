@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
   }
   try {
     const body = (await request.json()) as Partial<Local>
-    if (!body.nome || !body.morada) {
-      return NextResponse.json({ error: "Nome e morada são obrigatórios" }, { status: 400 })
+    if (!body.nome || body.nome.trim().length < 2) {
+      return NextResponse.json({ error: "Indica um nome para o local" }, { status: 400 })
     }
     const agora = new Date().toISOString()
     const novo = await atualizarLocais((locais) => {
@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ local: novo }, { status: 201 })
   } catch (error) {
     console.error("[v0] Erro a criar local:", error)
-    return NextResponse.json({ error: "Falha ao criar local" }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: "Falha ao criar local: " + msg }, { status: 500 })
   }
 }

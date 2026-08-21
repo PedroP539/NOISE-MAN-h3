@@ -5,8 +5,24 @@ const DATA_PATH = "locais/dados.json"
 const BACKUP_PREFIX = "locais/backups/dados-"
 const SNAPSHOT_RETENCAO = 10
 
+// O Vercel Blob tem consistência eventual: uma leitura logo a seguir a uma
+// escrita pode devolver dados antigos (ex.: medição guardada não encontra o
+// local acabado de criar). Este cache em memória guarda o último estado
+// gravado por esta instância e é usado durante uma pequena janela pós-escrita.
+let cachePosEscrita: { texto: string; em: number } | null = null
+const JANELA_CACHE_MS = 5000
+
 // Lê a coleção de locais a partir do Blob privado.
 export async function lerLocais(): Promise<Local[]> {
+  // Janela pós-escrita: devolver o estado que esta instância acabou de gravar
+  if (cachePosEscrita && Date.now() - cachePosEscrita.em < JANELA_CACHE_MS) {
+    try {
+      const parsed = JSON.parse(cachePosEscrita.texto)
+      if (Array.isArray(parsed)) return parsed as Local[]
+    } catch {
+      // cache corrompida — ignorar e ir ao Blob
+    }
+  }
   try {
     const res = await get(DATA_PATH, { access: "private" })
     if (!res) return []
@@ -30,12 +46,14 @@ export async function lerLocais(): Promise<Local[]> {
 
 // Grava a coleção completa de locais.
 export async function gravarLocais(locais: Local[]): Promise<void> {
-  await put(DATA_PATH, JSON.stringify(locais, null, 2), {
+  const texto = JSON.stringify(locais, null, 2)
+  await put(DATA_PATH, texto, {
     access: "private",
     contentType: "application/json",
     addRandomSuffix: false,
     allowOverwrite: true,
   })
+  cachePosEscrita = { texto, em: Date.now() }
 }
 
 // Guarda uma cópia do estado atual antes de o substituir; mantém só os últimos SNAPSHOT_RETENCAO.

@@ -35,7 +35,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ medicao }, { status: 201 })
   } catch (error) {
     console.error("[v0] Erro a registar medição:", error)
-    return NextResponse.json({ error: "Falha ao registar medição" }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: "Falha ao registar medição: " + msg }, { status: 500 })
   }
 }
 
@@ -63,6 +64,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[v0] Erro a apagar medição:", error)
-    return NextResponse.json({ error: "Falha ao apagar medição" }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: "Falha ao apagar medição: " + msg }, { status: 500 })
   }
 }
