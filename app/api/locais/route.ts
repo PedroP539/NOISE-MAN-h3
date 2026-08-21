@@ -1,10 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { lerLocais, gravarLocais } from "@/lib/store"
+import { lerLocais, atualizarLocais } from "@/lib/store"
+import { estaAutenticado } from "@/lib/auth"
 import type { Local } from "@/lib/ruido"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!(await estaAutenticado(request))) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  }
   try {
     const locais = await lerLocais()
     // ordena por atualização mais recente
@@ -17,33 +21,37 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  if (!(await estaAutenticado(request))) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 })
+  }
   try {
     const body = (await request.json()) as Partial<Local>
     if (!body.nome || !body.morada) {
       return NextResponse.json({ error: "Nome e morada são obrigatórios" }, { status: 400 })
     }
-    const locais = await lerLocais()
     const agora = new Date().toISOString()
-    const novo: Local = {
-      id: crypto.randomUUID(),
-      criadoEm: agora,
-      atualizadoEm: agora,
-      nome: body.nome,
-      morada: body.morada,
-      concelho: body.concelho ?? "",
-      freguesia: body.freguesia ?? "",
-      classificacaoZona: body.classificacaoZona ?? "nao_classificada",
-      fonteRuido: body.fonteRuido ?? "",
-      descricaoFonte: body.descricaoFonte ?? "",
-      horarioIncomodo: body.horarioIncomodo ?? "",
-      nomeDenunciante: body.nomeDenunciante ?? "",
-      contactoDenunciante: body.contactoDenunciante ?? "",
-      moradaDenunciante: body.moradaDenunciante ?? "",
-      notas: body.notas ?? "",
-      medicoes: [],
-    }
-    locais.push(novo)
-    await gravarLocais(locais)
+    const novo = await atualizarLocais((locais) => {
+      const criado: Local = {
+        id: crypto.randomUUID(),
+        criadoEm: agora,
+        atualizadoEm: agora,
+        nome: body.nome!,
+        morada: body.morada!,
+        concelho: body.concelho ?? "",
+        freguesia: body.freguesia ?? "",
+        classificacaoZona: body.classificacaoZona ?? "nao_classificada",
+        fonteRuido: body.fonteRuido ?? "",
+        descricaoFonte: body.descricaoFonte ?? "",
+        horarioIncomodo: body.horarioIncomodo ?? "",
+        nomeDenunciante: body.nomeDenunciante ?? "",
+        contactoDenunciante: body.contactoDenunciante ?? "",
+        moradaDenunciante: body.moradaDenunciante ?? "",
+        notas: body.notas ?? "",
+        medicoes: [],
+      }
+      locais.push(criado)
+      return criado
+    })
     return NextResponse.json({ local: novo }, { status: 201 })
   } catch (error) {
     console.error("[v0] Erro a criar local:", error)

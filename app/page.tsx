@@ -1,16 +1,51 @@
 "use client"
 
 import { useState } from "react"
+import useSWR, { useSWRConfig } from "swr"
 import { useLocais } from "@/hooks/use-locais"
 import { LocalForm } from "@/components/local-form"
 import { LocalDetalhe } from "@/components/local-detalhe"
+import { LoginPanel } from "@/components/login-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { avaliarIncomodidade, ZONAS, type Local } from "@/lib/ruido"
-import { Activity, Plus, MapPin, ChevronRight, AudioLines } from "lucide-react"
+import { Activity, Plus, MapPin, ChevronRight, AudioLines, LogOut } from "lucide-react"
 import { toast } from "sonner"
 
 export default function Page() {
+  // Estado de sessão: decide entre o painel de login e a aplicação
+  const {
+    data: sessao,
+    isLoading: sessaoAcarregar,
+    mutate: mutarSessao,
+  } = useSWR<{ autenticado: boolean }>("/api/auth/session", (url: string) =>
+    fetch(url).then((r) => r.json()),
+  )
+
+  if (sessaoAcarregar) {
+    return (
+      <Shell>
+        <p className="py-20 text-center text-sm text-muted-foreground">A carregar...</p>
+      </Shell>
+    )
+  }
+
+  if (!sessao?.autenticado) {
+    return (
+      <Shell>
+        <LoginPanel onSuccess={() => mutarSessao()} />
+      </Shell>
+    )
+  }
+
+  return (
+    <Shell>
+      <Conteudo />
+    </Shell>
+  )
+}
+
+function Conteudo() {
   const {
     locais,
     isLoading,
@@ -90,6 +125,14 @@ export default function Page() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const { mutate } = useSWRConfig()
+
+  async function terminarSessao() {
+    await fetch("/api/auth/logout", { method: "POST" })
+    await mutate("/api/auth/session", { autenticado: false }, { revalidate: false })
+    toast.success("Sessão terminada.")
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
@@ -103,6 +146,15 @@ function Shell({ children }: { children: React.ReactNode }) {
               Registo e denúncia · Decreto-Lei n.º 9/2007
             </p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={terminarSessao}
+            className="ml-auto gap-2 text-muted-foreground"
+          >
+            <LogOut className="size-4" />
+            Sair
+          </Button>
         </div>
       </header>
       <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
