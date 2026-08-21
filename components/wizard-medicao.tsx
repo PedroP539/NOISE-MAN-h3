@@ -1,7 +1,17 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Loader2, Mic, Save, ArrowRight, ArrowLeft, FileText, Clock, Check } from "lucide-react"
+import {
+  Loader2,
+  Mic,
+  Save,
+  ArrowRight,
+  ArrowLeft,
+  FileText,
+  Clock,
+  Check,
+  MapPin,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +25,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SoundMeter } from "@/components/sound-meter"
-import { PERIODOS, periodoAtual, type Local, type Medicao, type PeriodoReferencia } from "@/lib/ruido"
+import { MapaLocais } from "@/components/mapa-locais"
+import {
+  PERIODOS,
+  periodoAtual,
+  distanciaMetros,
+  type Local,
+  type Medicao,
+  type PeriodoReferencia,
+} from "@/lib/ruido"
 
 type Props = {
   locais: Local[]
@@ -26,6 +44,9 @@ type Props = {
 }
 
 type ValoresCapturados = { laeq: number; max: number }
+type Gps = { lat: number; lng: number }
+
+const DISTANCIA_AUTO_SELECAO_M = 400
 
 function sugestaoNome() {
   const agora = new Date()
@@ -53,6 +74,9 @@ export function WizardMedicao({
   const [modoLocal, setModoLocal] = useState<"existente" | "novo">(
     locais.length > 0 ? "existente" : "novo",
   )
+  const [gps, setGps] = useState<Gps | null>(null)
+  const [gpsAObter, setGpsAObter] = useState(false)
+  const [gpsErro, setGpsErro] = useState<string | null>(null)
   const [localId, setLocalId] = useState<string | null>(null)
   const [busca, setBusca] = useState("")
   const [nomeNovo, setNomeNovo] = useState(sugestaoNome())
@@ -81,7 +105,12 @@ export function WizardMedicao({
 
       if (modoLocal === "novo") {
         if (nomeNovo.trim().length < 2) throw new Error("Indica um nome para o local")
-        const novo = await criarLocal({ nome: nomeNovo.trim(), morada: moradaNova.trim() })
+        const novo = await criarLocal({
+          nome: nomeNovo.trim(),
+          morada: moradaNova.trim(),
+          latitude: gps?.lat ?? null,
+          longitude: gps?.lng ?? null,
+        })
         alvoId = novo.id
       } else if (!localEscolhido) {
         throw new Error("Escolhe um local existente ou cria um novo")
@@ -216,15 +245,84 @@ export function WizardMedicao({
 
   // ---------- PASSO 2 · LOCAL ----------
   if (passo === "local") {
+    // local mais próximo do GPS (se houver)
+    const maisProximo = (() => {
+      if (!gps) return null
+      let melhor: { local: Local; distancia: number } | null = null
+      for (const l of locais) {
+        const d = distanciaMetros({ latitude: gps.lat, longitude: gps.lng }, l)
+        if (d != null && (!melhor || d < melhor.distancia)) {
+          melhor = { local: l, distancia: d }
+        }
+      }
+      return melhor && melhor.distancia <= DISTANCIA_AUTO_SELECAO_M ? melhor : null
+    })()
+
+    function obterGps() {
+      setGpsErro(null)
+      setGpsAObter(true)
+      if (!("geolocation" in navigator)) {
+        setGpsErro("Este dispositivo não permite obter a localização")
+        setGpsAObter(false)
+        return
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const nova = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setGps(nova)
+
+          // auto-selecionar o local conhecido mais próximo
+          let melhor: { id: string; distancia: number } | null = null
+          for (const l of locais) {
+            const d = distanciaMetros({ latitude: nova.lat, longitude: nova.lng }, l)
+            if (d != null && (!melhor || d < melhor.distancia)) {
+              melhor = { id: l.id, distancia: d }
+            }
+          }
+          if (melhor && melhor.distancia <= DISTANCIA_AUTO_SELECAO_M) {
+            setModoLocal("existente")
+            setLocalId(melhor.id)
+          } else {
+            // nenhum local por perto: pré-selecionar criação de novo com GPS
+            setModoLocal("novo")
+          }
+          setGpsAObter(false)
+        },
+        () => {
+          setGpsErro("Não foi possível obter a localização (verifica as permissões)")
+          setGpsAObter(false)
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
+      )
+    }
+
     return (
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
         <Cabecalho passo={2} titulo="Onde foi?" />
         <p className="-mt-3 text-center text-sm text-muted-foreground">
-          Associa a medição a um local existente ou cria um novo em segundos — os detalhes ficam
+          Usa o GPS para associar em segundos, escolhe no mapa ou cria um novo — os detalhes ficam
           para depois.
         </p>
 
+        <Button variant="secondary" className="w-full gap-2" onClick={obterGps} disabled={gpsAObter}>
+          {gpsAObter ? <Loader2 className="size-4 animate-spin" /> : <MapPin className="size-4" />}
+          {gpsAObter
+            ? "A obter localização..."
+            : gps
+              ? "Atualizar a minha localização"
+              : "Estou no local — usar o meu GPS"}
+        </Button>
+        {gpsErro && <p className="-mt-3 text-center text-sm text-destructive">{gpsErro}</p>}
+        {gps && maisProximo && modoLocal === "existente" && localId === maisProximo.local.id && (
+          <p className="-mt-3 flex items-center justify-center gap-1.5 text-center text-sm text-chart-3">
+            <Check className="size-4" />
+            Selecionado “{maisProximo.local.nome}” — a {maisProximo.distancia} m de ti
+          </p>
+        )}
+
         <div className="glass grid gap-4 rounded-2xl p-5">
+          <MapaLocais locais={locais} selecionadoId={modoLocal === "existente" ? localId : null} onSelecionar={setLocalId} gps={gps} />
+
           <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
@@ -239,7 +337,7 @@ export function WizardMedicao({
               variant={modoLocal === "novo" ? "default" : "secondary"}
               onClick={() => setModoLocal("novo")}
             >
-              Novo local rápido
+              Novo local rápido{gps ? " (com GPS)" : ""}
             </Button>
           </div>
 
@@ -251,25 +349,31 @@ export function WizardMedicao({
                 onChange={(e) => setBusca(e.target.value)}
               />
               <ul className="grid max-h-64 gap-2 overflow-y-auto pr-1">
-                {locaisFiltrados.map((l) => (
-                  <li key={l.id}>
-                    <button
-                      type="button"
-                      onClick={() => setLocalId(l.id)}
-                      className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
-                        localId === l.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-card/50 hover:border-primary/50"
-                      }`}
-                    >
-                      <span>
-                        <span className="block font-medium">{l.nome}</span>
-                        <span className="block text-xs text-muted-foreground">{l.morada}</span>
-                      </span>
-                      {localId === l.id && <Check className="size-4 text-primary" />}
-                    </button>
-                  </li>
-                ))}
+                {locaisFiltrados.map((l) => {
+                  const d = gps ? distanciaMetros({ latitude: gps.lat, longitude: gps.lng }, l) : null
+                  return (
+                    <li key={l.id}>
+                      <button
+                        type="button"
+                        onClick={() => setLocalId(l.id)}
+                        className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors ${
+                          localId === l.id
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-card/50 hover:border-primary/50"
+                        }`}
+                      >
+                        <span>
+                          <span className="block font-medium">{l.nome}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {l.morada}
+                            {d != null && ` · a ${d < 1000 ? `${d} m` : `${(d / 1000).toFixed(1)} km`}`}
+                          </span>
+                        </span>
+                        {localId === l.id && <Check className="size-4 shrink-0 text-primary" />}
+                      </button>
+                    </li>
+                  )
+                })}
                 {locaisFiltrados.length === 0 && (
                   <li className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
                     Nenhum local encontrado.
@@ -289,6 +393,7 @@ export function WizardMedicao({
                 />
                 <p className="text-xs text-muted-foreground">
                   Sugerimos um nome pela hora atual — edita se quiseres.
+                  {gps && " As coordenadas GPS serão guardadas com este local."}
                 </p>
               </div>
               <div className="grid gap-2">

@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
         concelho: body.concelho ?? "",
         freguesia: body.freguesia ?? "",
         classificacaoZona: body.classificacaoZona ?? "nao_classificada",
+        latitude: body.latitude ?? null,
+        longitude: body.longitude ?? null,
         fonteRuido: body.fonteRuido ?? "",
         descricaoFonte: body.descricaoFonte ?? "",
         horarioIncomodo: body.horarioIncomodo ?? "",

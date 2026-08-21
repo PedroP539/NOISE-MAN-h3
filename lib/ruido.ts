@@ -15,6 +15,9 @@ export type Local = {
   concelho: string
   freguesia: string
   classificacaoZona: ClassificacaoZona
+  // Localização GPS (opcional; capturada no momento da medição)
+  latitude?: number | null
+  longitude?: number | null
   // Fonte do ruído
   fonteRuido: string
   descricaoFonte: string
@@ -27,6 +30,24 @@ export type Local = {
   notas: string
   // Medições associadas
   medicoes: Medicao[]
+}
+
+/** Distância em metros entre dois pontos (fórmula de haversine). */
+export function distanciaMetros(
+  a: { latitude?: number | null; longitude?: number | null },
+  b: { latitude?: number | null; longitude?: number | null },
+): number | null {
+  if (a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) {
+    return null
+  }
+  const R = 6371000
+  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180
+  const dLon = ((b.longitude - a.longitude) * Math.PI) / 180
+  const lat1 = (a.latitude * Math.PI) / 180
+  const lat2 = (b.latitude * Math.PI) / 180
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2
+  return Math.round(2 * R * Math.asin(Math.sqrt(h)))
 }
 
 export type Medicao = {
