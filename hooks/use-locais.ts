@@ -23,7 +23,7 @@ export function useLocais() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-    if (!res.ok) throw new Error("Falha ao criar local")
+    if (!res.ok) throw new Error(await mensagemErro(res, "Falha ao criar local"))
     const { local } = (await res.json()) as { local: Local }
     await atualizarCache((atual) => [local, ...atual])
     return local
@@ -35,14 +35,14 @@ export function useLocais() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-    if (!res.ok) throw new Error("Falha ao atualizar local")
+    if (!res.ok) throw new Error(await mensagemErro(res, "Falha ao atualizar local"))
     const { local } = (await res.json()) as { local: Local }
     await atualizarCache((atual) => atual.map((l) => (l.id === id ? local : l)))
   }
 
   async function apagarLocal(id: string) {
     const res = await fetch(`/api/locais/${id}`, { method: "DELETE" })
-    if (!res.ok) throw new Error("Falha ao apagar local")
+    if (!res.ok) throw new Error(await mensagemErro(res, "Falha ao apagar local"))
     await atualizarCache((atual) => atual.filter((l) => l.id !== id))
   }
 
@@ -52,7 +52,7 @@ export function useLocais() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-    if (!res.ok) throw new Error("Falha ao registar medição")
+    if (!res.ok) throw new Error(await mensagemErro(res, "Falha ao registar medição"))
     const { medicao } = (await res.json()) as { medicao: Medicao }
     await atualizarCache((atual) =>
       atual.map((l) =>
@@ -65,7 +65,7 @@ export function useLocais() {
     const res = await fetch(`/api/locais/${id}/medicoes?medicaoId=${medicaoId}`, {
       method: "DELETE",
     })
-    if (!res.ok) throw new Error("Falha ao apagar medição")
+    if (!res.ok) throw new Error(await mensagemErro(res, "Falha ao apagar medição"))
     await atualizarCache((atual) =>
       atual.map((l) =>
         l.id === id
@@ -85,5 +85,16 @@ export function useLocais() {
     adicionarMedicao,
     apagarMedicao,
     mutate,
+  }
+}
+
+// Extrai a mensagem de erro devolvida pela API (para diagnóstico real no toast)
+async function mensagemErro(res: Response, fallback: string): Promise<string> {
+  try {
+    const dados = (await res.json()) as { error?: string }
+    if (res.status === 401) return "Sessão expirada — entra de novo"
+    return dados.error ? `${fallback}: ${dados.error}` : fallback
+  } catch {
+    return `${fallback} (HTTP ${res.status})`
   }
 }
